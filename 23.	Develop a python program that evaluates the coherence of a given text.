@@ -1,0 +1,32 @@
+import nltk
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+def preprocess_text(text):
+    sentences = nltk.sent_tokenize(text)
+    return sentences
+
+def calculate_sentence_embeddings(sentences):
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(sentences)
+    return tfidf_matrix.toarray()
+
+def calculate_coherence(text):
+    sentences = preprocess_text(text)
+    sentence_embeddings = calculate_sentence_embeddings(sentences)
+    
+    # Calculate pairwise cosine similarity between sentence embeddings
+    similarity_matrix = cosine_similarity(sentence_embeddings)
+    
+    # Calculate coherence as the average pairwise cosine similarity
+    num_sentences = len(sentences)
+    total_similarity = np.sum(similarity_matrix - np.eye(num_sentences))
+    coherence = total_similarity / (num_sentences * (num_sentences - 1))
+    
+    return coherence
+
+if __name__ == "__main__":
+    text = "This is the first sentence. This is the second sentence. The third sentence is different."
+    coherence = calculate_coherence(text)
+    print("Coherence of the text:", coherence)
