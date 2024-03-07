@@ -1,34 +1,27 @@
 import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+nltk.download('punkt')
 
-def recognize_dialog_acts(dialog):
-    dialog_acts = []
+# Sample conversation
+conversation = [
+    "Hello there! How are you doing today?",
+    "I'm doing great, thanks for asking.",
+    "Can you help me with my homework?",
+    "Sure, I'd be happy to help. What do you need assistance with?",
+    "I'm stuck on this math problem.",
+    "Alright, let me take a look.",
+]
 
-    for utterance in dialog:
-        tokens = nltk.word_tokenize(utterance)
-        tagged_tokens = nltk.pos_tag(tokens)
-
-        if tokens[-1] == '?':
-            dialog_acts.append("question")
-        elif tokens[-1] == '!':
-            dialog_acts.append("exclamation")
-        elif tagged_tokens[0][1] == 'PRP' or tagged_tokens[0][1] == 'VB' or tagged_tokens[0][1] == 'MD':
-            dialog_acts.append("statement")
+# Iterate through the conversation and recognize dialog acts
+for i, utterance in enumerate(conversation):
+    # Tokenize the utterance into sentences
+    sentences = sent_tokenize(utterance)
+    
+    for j, sentence in enumerate(sentences):
+        words = word_tokenize(sentence)
+        if "?" in words:
+            dialog_act = "question"
         else:
-            dialog_acts.append("other")
-
-    return dialog_acts
-
-if __name__ == "__main__":
-    dialog = [
-        "How are you?",
-        "I'm doing well, thanks!",
-        "Could you please pass the salt?",
-        "Sure, here you go.",
-        "Wow, that's impressive!",
-        "I think we should leave now."
-    ]
-
-    dialog_acts = recognize_dialog_acts(dialog)
-    print("Dialog Acts:")
-    for utterance, dialog_act in zip(dialog, dialog_acts):
-        print(f"'{utterance}': {dialog_act}")
+            dialog_act = "statement"
+        
+        print(f"Utterance {i + 1}, Sentence {j + 1}: {dialog_act.capitalize()} - {sentence}")
