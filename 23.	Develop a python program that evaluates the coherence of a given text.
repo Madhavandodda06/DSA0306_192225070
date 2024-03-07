@@ -1,32 +1,20 @@
 import nltk
-import numpy as np
-from sklearn.metrics.pairwise import cosine_similarity
+from nltk.corpus import stopwords
+from nltk.tokenize import sent_tokenize, word_tokenize
 from sklearn.feature_extraction.text import TfidfVectorizer
-
-def preprocess_text(text):
-    sentences = nltk.sent_tokenize(text)
-    return sentences
-
-def calculate_sentence_embeddings(sentences):
-    vectorizer = TfidfVectorizer()
-    tfidf_matrix = vectorizer.fit_transform(sentences)
-    return tfidf_matrix.toarray()
-
-def calculate_coherence(text):
-    sentences = preprocess_text(text)
-    sentence_embeddings = calculate_sentence_embeddings(sentences)
-    
-    # Calculate pairwise cosine similarity between sentence embeddings
-    similarity_matrix = cosine_similarity(sentence_embeddings)
-    
-    # Calculate coherence as the average pairwise cosine similarity
-    num_sentences = len(sentences)
-    total_similarity = np.sum(similarity_matrix - np.eye(num_sentences))
-    coherence = total_similarity / (num_sentences * (num_sentences - 1))
-    
-    return coherence
-
-if __name__ == "__main__":
-    text = "This is the first sentence. This is the second sentence. The third sentence is different."
-    coherence = calculate_coherence(text)
-    print("Coherence of the text:", coherence)
+from sklearn.metrics.pairwise import cosine_similarity
+text = """
+Coherence in writing means that the ideas in each sentence and paragraph are connected and logical.
+It helps the reader to follow your arguments and understand your point. Without coherence, the text may be confusing.
+There are several ways to achieve coherence in your writing, such as using transition words and repeating key concepts.
+"""
+sentences = sent_tokenize(text)
+stop_words = set(stopwords.words("english"))
+word_tokens = [word_tokenize(sentence) for sentence in sentences]
+filtered_tokens = [[word for word in words if word.lower() not in stop_words] for words in word_tokens]
+preprocessed_sentences = [" ".join(words).lower() for words in filtered_tokens]
+vectorizer = TfidfVectorizer()
+tfidf_matrix = vectorizer.fit_transform(preprocessed_sentences)
+cosine_matrix = cosine_similarity(tfidf_matrix, tfidf_matrix)
+coherence_score = cosine_matrix.sum(axis=1).mean()
+print("Coherence Score:", coherence_score)
