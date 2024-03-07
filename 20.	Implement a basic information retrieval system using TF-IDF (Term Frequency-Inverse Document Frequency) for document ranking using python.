@@ -1,60 +1,54 @@
 import math
 from collections import Counter
 
-class TFIDF:
-    def __init__(self, documents):
-        self.documents = documents
-        self.document_count = len(documents)
-        self.tf_scores = []
-        self.idf_scores = {}
-        self.tfidf_scores = []
+documents = [
+    "This is the first document. It is a simple document.",
+    "This document is the second one. It has more words.",
+    "And this is the third document. It has even more words."
+]
 
-    def calculate_tf(self, document):
-        word_count = len(document.split())
-        term_frequency = Counter(document.split())
-        tf_scores = {term: count / word_count for term, count in term_frequency.items()}
-        return tf_scores
+query = "simple document"
 
-    def calculate_idf(self):
-        all_terms = [term for document in self.documents for term in document.split()]
-        document_frequency = Counter(all_terms)
-        idf_scores = {term: math.log(self.document_count / (document_frequency[term] + 1)) for term in document_frequency}
-        return idf_scores
+stopwords = set(["this", "is", "the", "and", "it", "has"])
 
-    def calculate_tfidf(self):
-        self.tf_scores = [self.calculate_tf(document) for document in self.documents]
-        self.idf_scores = self.calculate_idf()
+tokenized_documents = []
+for doc in documents:
+    doc = doc.lower()
+    doc = doc.split()
+    doc = [word for word in doc if word not in stopwords and word.isalpha()]
+    tokenized_documents.append(doc)
 
-        self.tfidf_scores = []
-        for tf_score in self.tf_scores:
-            tfidf_score = {term: tf * self.idf_scores[term] for term, tf in tf_score.items()}
-            self.tfidf_scores.append(tfidf_score)
+N = len(documents)
+vocabulary = set(word for doc in tokenized_documents for word in doc)
 
-    def rank_documents(self, query):
-        query_tf = self.calculate_tf(query)
-        query_tfidf = {term: tf * self.idf_scores.get(term, 0) for term, tf in query_tf.items()}
+tfidf_scores = []
+for doc in tokenized_documents:
+    tfidf_doc = {}
+    for term in vocabulary:
+        tf = doc.count(term)
+        df = sum(1 for d in tokenized_documents if term in d)
+        idf = math.log(N / (df + 1))
+        tfidf = tf * idf
+        tfidf_doc[term] = tfidf
+    tfidf_scores.append(tfidf_doc)
 
-        scores = []
-        for idx, tfidf_score in enumerate(self.tfidf_scores):
-            score = sum(query_tfidf.get(term, 0) * tfidf_score.get(term, 0) for term in query_tf.keys())
-            scores.append((idx, score))
+query = query.lower().split()
+query_vector = Counter(query)
 
-        ranked_documents = sorted(scores, key=lambda x: x[1], reverse=True)
-        return ranked_documents
+ranked_documents = []
+for i, doc in enumerate(tfidf_scores):
+    dot_product = sum(doc[term] * query_vector[term] for term in query if term in doc)
+    doc_length = math.sqrt(sum(score ** 2 for score in doc.values()))
+    query_length = math.sqrt(sum(score ** 2 for score in query_vector.values()))
+    
+    if query_length == 0:
+        similarity = 0
+    else:
+        similarity = dot_product / (doc_length * query_length)
 
-if __name__ == "__main__":
-    documents = [
-        "TF-IDF stands for Term Frequency-Inverse Document Frequency.",
-        "It is a numerical statistic used to reflect the importance of a word to a document in a collection.",
-        "The importance increases proportionally to the number of times a word appears in the document but is offset by the frequency of the word in the collection of documents."
-    ]
+    ranked_documents.append((i, similarity))
 
-    ir_system = TFIDF(documents)
-    ir_system.calculate_tfidf()
+ranked_documents.sort(key=lambda x: x[1], reverse=True)
 
-    query = "TF-IDF is a numerical statistic."
-    ranked_documents = ir_system.rank_documents(query)
-
-    print("Ranked Documents:")
-    for idx, score in ranked_documents:
-        print(f"Document {idx + 1}: Score {score}")
+for i, similarity in ranked_documents:
+    print(f"Document {i + 1} - Similarity: {similarity:.4f}")
