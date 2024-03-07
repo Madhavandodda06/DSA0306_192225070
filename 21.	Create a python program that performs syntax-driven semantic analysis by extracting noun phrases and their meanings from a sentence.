@@ -1,32 +1,26 @@
-import nltk
-from nltk.chunk.regexp import RegexpParser
+import spacy
+
+nlp = spacy.load("en_core_web_sm")
 
 def extract_noun_phrases(sentence):
-    # Tokenize the sentence
-    tokens = nltk.word_tokenize(sentence)
-    
-    # Perform part-of-speech tagging
-    tagged_tokens = nltk.pos_tag(tokens)
-    
-    # Define a chunk grammar to extract noun phrases
-    grammar = r"""
-        NP: {<DT|JJ|NN.*>+} # Chunk sequences of DT, JJ, NN
-    """
-    parser = RegexpParser(grammar)
-    
-    # Parse the tagged tokens to extract noun phrases
-    parsed_sentence = parser.parse(tagged_tokens)
-    
-    # Extract noun phrases and their meanings
-    noun_phrases = []
-    for subtree in parsed_sentence.subtrees():
-        if subtree.label() == 'NP':
-            noun_phrase = ' '.join(word for word, tag in subtree.leaves())
-            noun_phrases.append(noun_phrase)
-    
-    return noun_phrases
+    doc = nlp(sentence)
 
-if __name__ == "__main__":
-    sentence = "The quick brown fox jumps over the lazy dog"
-    noun_phrases = extract_noun_phrases(sentence)
-    print("Noun Phrases:", noun_phrases)
+    noun_phrases = []
+    meanings = []
+
+    for chunk in doc.noun_chunks:
+        noun_phrases.append(chunk.text)
+        meanings.append(chunk.text)
+
+    return noun_phrases, meanings
+sentence = "The quick brown fox jumped over the lazy dog."
+
+noun_phrases, meanings = extract_noun_phrases(sentence)
+
+print("Sentence:", sentence)
+print("Noun Phrases:")
+for phrase in noun_phrases:
+    print(phrase)
+print("Meanings:")
+for meaning in meanings:
+    print(meaning)
