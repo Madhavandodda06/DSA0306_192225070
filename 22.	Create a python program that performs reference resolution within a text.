@@ -1,0 +1,38 @@
+import nltk
+
+def resolve_references(text):
+    # Tokenize the text into sentences
+    sentences = nltk.sent_tokenize(text)
+    
+    resolved_sentences = []
+    antecedent = None
+    
+    for sentence in sentences:
+        # Tokenize each sentence into words
+        words = nltk.word_tokenize(sentence)
+        
+        # Perform part-of-speech tagging
+        tagged_words = nltk.pos_tag(words)
+        
+        resolved_sentence = []
+        for word, tag in tagged_words:
+            if tag == 'PRP':  # Check if the word is a pronoun
+                if word.lower() == 'he' or word.lower() == 'she':  # Example: he/she
+                    resolved_sentence.append(antecedent)
+                else:
+                    resolved_sentence.append(word)  # Assume other pronouns remain unchanged
+            elif tag.startswith('NN'):  # Check if the word is a noun
+                antecedent = word  # Update the antecedent
+                resolved_sentence.append(word)
+            else:
+                resolved_sentence.append(word)
+        
+        resolved_sentences.append(' '.join(resolved_sentence))
+    
+    return ' '.join(resolved_sentences)
+
+if __name__ == "__main__":
+    text = "John went to the store. He bought some milk. Mary saw him there."
+    resolved_text = resolve_references(text)
+    print("Resolved Text:")
+    print(resolved_text)
